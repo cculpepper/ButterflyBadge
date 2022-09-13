@@ -1,0 +1,3 @@
+[submodule "Hardware/ButterflyBadge/library/AB1TJKicadLibrary"]
+	path = Hardware/ButterflyBadge/library/AB1TJKicadLibrary
+	url = git@github.com:cculpepper/AB1TJKicadLibrary.git

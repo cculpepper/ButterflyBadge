@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name "ST25DV04K")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/ST25DV04K.kicad_sym")(options "")(descr ""))
+  (lib (name "SK6812-SideA")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/SK6812-SideA.kicad_sym")(options "")(descr ""))
+  (lib (name "Tag-Connect")(type "Legacy")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/TagConnect/4/Tag-Connect.lib")(options "")(descr ""))
+)
