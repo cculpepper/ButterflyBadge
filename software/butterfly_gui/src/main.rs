@@ -3,6 +3,7 @@
 use std::borrow::BorrowMut;
 use std::f32::consts::TAU;
 use std::ops::{RangeInclusive, Rem};
+use std::time::Duration;
 use eframe::egui;
 use eframe::emath::Pos2;
 use egui::{Color32, epaint, Sense, TextureHandle, vec2};
@@ -84,13 +85,11 @@ impl Default for MyApp {
 
 }
 
-
 fn hue_for_uv(uv: Vec2) -> f32 {
     let hue = uv.length();
 
     hue
 }
-
 
 /// time in seconds since program start
 // offset sin wave for saturation
@@ -106,11 +105,10 @@ fn color_fn_1(uv: Vec2, time: f32) -> Color32 {
     let wave_vec = Vec2::angled(TAU * 0.25);
     let projection = uv.dot(wave_vec) * wave_vec;
 
-    let wave_t_offset = projection.length() / WAVELENGTH;
+    let wave_t_offset = projection.length() % WAVELENGTH;
     let wave_height = ((time_t * TAU) + wave_t_offset).sin().abs();
 
     let x = wave_height * (SATURATION_RANGE[1] - SATURATION_RANGE[0]) + SATURATION_RANGE[0];
-
 
     let hue = {
         let offset_uv = Vec2 {
@@ -156,13 +154,6 @@ impl eframe::App for MyApp {
             self.butterfly_texture.show_size(ui, size);
 
             let painter = ui.painter();
-            // let (resp, painter) = ui.allocate_painter(size, Sense::hover());
-            // let c = CircleShape {
-            //     center: Pos2{ x: size.to_pos2().x/2., y: size.to_pos2().y/2.},
-            //     radius: 100.,
-            //     fill: Color32::RED,
-            //     stroke: Default::default()
-            // };
 
             for led in &self.leds {
 
@@ -180,6 +171,8 @@ impl eframe::App for MyApp {
 
                 painter.add(circle);
             }
+
+            ctx.request_repaint();
         });
 
         // egui::TopBottomPanel::bottom("panel").show(ctx, |ui: &mut egui::Ui| {
