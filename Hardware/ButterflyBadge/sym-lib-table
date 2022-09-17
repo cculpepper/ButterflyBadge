@@ -4,4 +4,5 @@
   (lib (name "Tag-Connect")(type "Legacy")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/TagConnect/4/Tag-Connect.lib")(options "")(descr ""))
   (lib (name "TMI8118")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/TMI8118.kicad_sym")(options "")(descr ""))
   (lib (name "CN3058")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/CN3058.kicad_sym")(options "")(descr ""))
+  (lib (name "Ax5201")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/Ax5201.kicad_sym")(options "")(descr ""))
 )
