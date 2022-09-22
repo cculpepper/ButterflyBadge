@@ -1,3 +1,4 @@
 (fp_lib_table
   (lib (name "ButterflyBadge")(type "KiCad")(uri "${KIPRJMOD}/library/ButterflyBadge.pretty")(options "")(descr ""))
+  (lib (name "XL3528RGBW")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/XL3528RGBW.pretty")(options "")(descr ""))
 )
