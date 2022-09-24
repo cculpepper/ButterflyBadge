@@ -2,7 +2,7 @@
 
 use std::borrow::BorrowMut;
 use std::f32::consts::TAU;
-use std::ops::{RangeInclusive, Rem};
+use std::ops::{RangeFull, RangeInclusive, Rem};
 use std::time::Duration;
 use eframe::egui;
 use eframe::emath::Pos2;
@@ -44,37 +44,9 @@ impl Default for MyApp {
     fn default() -> Self {
         let image = egui_extras::image::load_svg_bytes(include_bytes!("butterfly.svg")).unwrap();
 
-        let grid_size = [40usize, 40usize];
-
-        let mut leds = Vec::with_capacity(grid_size[0] * grid_size[1]);
-
-        for row_idx in 0..grid_size[0] {
-            for col_idx in 0..grid_size[1] {
-                let uv = Vec2 {
-                    x: (col_idx as f32 / grid_size[0] as f32),
-                    y: (row_idx as f32 / grid_size[1] as f32),
-                };
-
-                let (x, y) = (
-                    (image.size[0] as f32 * uv.x) as usize,
-                    (image.size[1] as f32 * uv.y) as usize,
-                );
-
-                let pixel_idx = y * image.size[0] + x;
-                let pixel = image.pixels[pixel_idx];
-
-                if pixel.is_opaque() {
-                    leds.push(LedData {
-                        uv,
-                        color: Color32::WHITE,
-                    });
-                }
-            }
-        }
-
         Self {
             frames_elapsed: 0,
-            leds,
+            leds: simple_led_layout_for_image(SimpleGrid::new(40,40), &image),
             butterfly_texture: RetainedImage::from_color_image(
                 "butterfly.svg",
                 image.clone(),
@@ -87,7 +59,6 @@ impl Default for MyApp {
 
 fn hue_for_uv(uv: Vec2) -> f32 {
     let hue = uv.length();
-
     hue
 }
 
@@ -182,3 +153,84 @@ impl eframe::App for MyApp {
     }
 
 }
+
+#[derive(Copy, Clone, Debug)]
+struct SimpleGrid {
+    size: [i32; 2],
+}
+
+impl SimpleGrid {
+    fn new(width: i32, height: i32) -> Self {
+        Self {
+            size: [width, height],
+        }
+    }
+
+    fn uv_for_pos(&self, pos: [i32; 2]) -> [f64; 2] {
+        [
+            (pos[0] as f64 / self.size[0] as f64),
+            (pos[1] as f64 / self.size[1] as f64),
+        ]
+    }
+
+    fn iter(self) -> NumIterator2d {
+        return NumIterator2d {
+            cur: [0,0],
+            bounds: self.size,
+        }
+    }
+}
+
+struct NumIterator2d {
+    cur: [i32; 2],
+    bounds: [i32; 2],
+}
+
+impl Iterator for NumIterator2d {
+    type Item = [i32; 2];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cur[1] + 1 < self.bounds[1] {
+            self.cur[1] += 1;
+            Some(self.cur)
+
+        } else if self.cur[0] + 1 < self.bounds[0] {
+            self.cur[1] = 0;
+            self.cur[0] += 1;
+            Some(self.cur)
+
+        } else {
+            return None;
+        }
+    }
+}
+
+fn simple_led_layout_for_image(grid: SimpleGrid, image: &ColorImage) -> Vec<LedData> {
+    let uv_to_image_xy = |uv: [f64; 2]| {
+        [
+            image.size[0] as f64 * uv[0],
+            image.size[1] as f64 * uv[1],
+        ]
+    };
+
+    let image_xy_to_idx = |xy: [f64; 2]| {
+        xy[1] as usize * image.size[0] + xy[0] as usize
+    };
+
+    grid.iter()
+        .map(|p| grid.uv_for_pos(p))
+        .filter_map(|uv| {
+            let pixel_idx = image_xy_to_idx(uv_to_image_xy(uv));
+            if image.pixels[pixel_idx].is_opaque() {
+                Some(LedData {
+                    uv: Vec2::new(uv[0] as f32, uv[1] as f32),
+                    color: Color32::WHITE,
+                })
+            } else {
+                None
+            }
+
+        }).collect()
+}
+
+
