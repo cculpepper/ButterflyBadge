@@ -16,6 +16,11 @@ use layout::*;
 use util::*;
 pub use app::MyApp;
 
+pub trait LayoutCreator {
+    fn show(&mut self, ui: &mut Ui) -> bool;
+    fn create(&self) -> Vec<Led>;
+}
+
 pub trait ContextCreator {
     /// Display the creator widget and return whether the settings changed.
     fn show(&mut self, ui: &mut Ui) -> bool;
@@ -40,6 +45,8 @@ pub trait ButterflyCreator {
 }
 
 
+
+
 struct SimpleContextCreator {
     time: f32,
     layout: Box<dyn LayoutCreator>,
@@ -49,7 +56,7 @@ impl Default for SimpleContextCreator {
     fn default() -> Self {
         Self {
             time: 0.,
-            layout: Box::new(layout::GridLayoutCreator::default()),
+            layout: Box::new(MultiLayoutCreator::default()),
         }
     }
 }
@@ -90,7 +97,6 @@ impl Default for SolidColorVisCreator {
         }
     }
 }
-
 
 struct FirstVisCreator {}
 
