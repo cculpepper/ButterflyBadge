@@ -159,7 +159,6 @@ impl VisCreator for MultiVisCreator {
         let selected_tup = &mut self.vis_creators[self.selected_idx];
         (self.selected_idx != last_idx) |
             selected_tup.1.show(ui)
-
     }
 
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {

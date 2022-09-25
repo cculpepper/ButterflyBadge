@@ -169,7 +169,10 @@ impl eframe::App for MyApp {
 
         egui::TopBottomPanel::bottom("panel").show(ctx, |ui: &mut egui::Ui| {
             if let Some(bf) = self.butterfly.as_ref() {
-                ui.label(format!("butterfly_time(s): {}", bf.ctx.time));
+                ui.horizontal_wrapped(|ui: &mut Ui| {
+                    ui.label(format!("butterfly_time(s) {}", bf.ctx.time));
+                    ui.label(format!("led_count {}", bf.ctx.leds.len()));
+                });
             }
         });
 
