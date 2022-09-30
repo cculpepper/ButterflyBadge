@@ -6,4 +6,8 @@
   (lib (name "CN3058")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/CN3058.kicad_sym")(options "")(descr ""))
   (lib (name "Ax5201")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/Ax5201.kicad_sym")(options "")(descr ""))
   (lib (name "TFDU4301-IRDA")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/TFDU4301-IRDA.kicad_sym")(options "")(descr ""))
+  (lib (name "HX612")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/HX612.kicad_sym")(options "")(descr ""))
+  (lib (name "AP3722AT-microphone")(type "KiCad")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/AP3722AT-microphone.kicad_sym")(options "")(descr ""))
+  (lib (name "badgelife_shitty_addon_v169bis")(type "Legacy")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/external/badgelife-parts/badgelife_shitty_addon_v169bis.lib")(options "")(descr ""))
+  (lib (name "LSAO")(type "Legacy")(uri "${KIPRJMOD}/library/AB1TJKicadLibrary/external/badgelife-parts/LSAO.lib")(options "")(descr ""))
 )
