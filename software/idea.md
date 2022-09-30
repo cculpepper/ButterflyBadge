@@ -1,0 +1,2 @@
+- each butterfly having a unique color
+- butterfly that has unique role in resetting color
