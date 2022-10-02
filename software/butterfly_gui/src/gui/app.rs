@@ -1,13 +1,11 @@
-use std::borrow::BorrowMut;
 use std::ops::{Mul, Sub};
 use eframe::egui;
-use eframe::egui::{Color32, ColorImage, Sense};
+use eframe::egui::{Color32, ColorImage, Sense,Pos2};
 use eframe::egui::CursorIcon::Text;
 use eframe::epaint::CircleShape;
 use egui_extras::RetainedImage;
-use emath::{Pos2};
 
-use crate::butterfly::{BfContext, BfVis, Butterfly, Led, Vec2};
+use crate::butterfly::{BfContext, BfVis, Butterfly, Led, Vec2,};
 use crate::butterfly::egui::Ui;
 use crate::butterfly::vis::BfVis1;
 use crate::gui::{ButterflyCreator, SimpleButterflyCreator};
@@ -68,9 +66,8 @@ impl MyApp {
         let LED_SCALE_BASE = 1. / 1200.;
 
         if let Some(ref bf) = self.butterfly {
-
             let (rect, resp) = ui.allocate_exact_size(size, Sense::hover());
-
+            
             let paint_region_size = rect.size() - PADDING.mul(Vec2::new(2.,2.));
             let paint_region_start = rect.min + PADDING;
 
@@ -80,7 +77,7 @@ impl MyApp {
                     y: (uv.y * paint_region_size.y) + paint_region_start.y
                 }
             };
-
+ 
             for led in &bf.ctx.leds {
                 let circle = CircleShape {
                     center: uv_to_pos(&led.uv),

@@ -6,8 +6,9 @@ use std::cell::Cell;
 use std::ops::{Mul, Sub};
 use eframe::epaint::CircleShape;
 use egui_extras::RetainedImage;
-use emath::{Pos2};
+use eframe::egui::{Pos2};
 
+use crate::butterfly::vis2::{MyVis2Config, MyVis2};
 use crate::butterfly::{BfContext, BfVis, Butterfly, Color32, egui, Led, Vec2};
 use crate::butterfly::egui::{ColorImage, Response, Sense, Ui};
 use crate::butterfly::vis::{BfVis1, SolidColorVis};
@@ -110,6 +111,7 @@ impl VisCreator for FirstVisCreator {
     }
 }
 
+// todo viscreator should have type bounds
 impl VisCreator for SolidColorVisCreator {
     fn show(&mut self, ui: &mut Ui) -> bool {
         ui.color_edit_button_srgba(&mut self.color).changed()
@@ -120,6 +122,25 @@ impl VisCreator for SolidColorVisCreator {
     }
 }
 
+impl VisCreator for MyVis2Config {
+    fn show(&mut self, ui: &mut Ui) -> bool {
+        ui.label("ring_count");
+
+        let mut changed = false;
+
+        changed |= ui.add(egui::DragValue::new(&mut self.ring_count).speed(1.)).changed();
+        changed |= ui.add(egui::Slider::new(&mut self.time_scale, (0.)..=(2.) )).changed();
+
+
+        changed
+    }
+
+    fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
+        Box::new(MyVis2::from_ctx_cfg(ctx, *self))
+    }
+}
+
+
 struct MultiVisCreator {
     selected_idx: usize,
     vis_creators: Vec<(String, Box<dyn VisCreator>)>,
@@ -128,6 +149,12 @@ struct MultiVisCreator {
 impl Default for MultiVisCreator {
     fn default() -> Self {
         let mut vis_creators: Vec<(String, Box<dyn VisCreator>)> = Vec::new();
+        
+        vis_creators.push((
+            String::from("Vis2"),
+            Box::new(MyVis2Config::default()),
+        ));
+        
         vis_creators.push((
             String::from("FirstVis"),
             Box::new(FirstVisCreator{})

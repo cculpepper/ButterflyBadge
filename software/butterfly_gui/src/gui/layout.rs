@@ -95,9 +95,9 @@ impl Default for RadialLayoutCreator {
     fn default() -> Self {
         let image = egui_extras::image::load_svg_bytes(include_bytes!("butterfly.svg")).unwrap();
         Self {
-            radius: 0.01,
+            radius: 0.04,
             step_angle: PI/30.,
-            cone_size: PI,
+            cone_size: 7./4.*PI,
             start: [0.5, 0.5],
 
             collide_detector: create_collide_detector(image),
@@ -165,7 +165,7 @@ impl LayoutCreator for RadialLayoutCreator {
 
             ui.label("radius");
             changed |= ui.add(
-                egui::Slider::new(&mut self.radius, (0.001)..=SQRT_2)
+                egui::Slider::new(&mut self.radius, (0.001)..=0.2)
             ).changed();
 
             ui.label("step_angle");
@@ -235,13 +235,15 @@ pub struct MultiLayoutCreator {
 impl Default for MultiLayoutCreator {
     fn default() -> Self {
         let mut creators: Vec<(String, Box<dyn LayoutCreator>)> = Vec::new();
-        creators.push((
-            String::from("Grid"),
-            Box::new(GridLayoutCreator::default())
-        ));
+       
         creators.push((
             String::from("Radial"),
             Box::new(RadialLayoutCreator::default())
+        ));
+
+        creators.push((
+            String::from("Grid"),
+            Box::new(GridLayoutCreator::default())
         ));
 
         Self {

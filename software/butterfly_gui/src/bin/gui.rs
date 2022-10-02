@@ -1,7 +1,5 @@
-use emath::{Pos2, Vec2};
-
-mod butterfly;
-mod gui;
+use eframe::egui::{Pos2, Vec2};
+use butterfly_gui::gui::MyApp;
 
 fn main() {
     let options = eframe::NativeOptions {
@@ -14,6 +12,6 @@ fn main() {
     eframe::run_native(
         "Butterfly Visualization",
         options,
-        Box::new(|_cc| Box::new(gui::MyApp::default())),
+        Box::new(|_cc| Box::new(MyApp::default())),
     );
 }
