@@ -87,3 +87,31 @@ pub fn adjust_uvs_to_fill(uvs: &mut [Vec2]) {
         *uv = uv_for_new_min_max(*uv);
     });
 }
+
+pub fn save_to_svg(points: impl Iterator<Item =(f32,f32)>, file_name: &str) {
+    use svg::Document;
+    use svg::node::element::Circle;
+
+    let view_box = (900,600);
+
+    let mut document = Document::new()
+        .set("viewBox", (0, 0, view_box.0, view_box.1));
+
+    let iter = points.map(|(x,y)| {
+        Circle::new()
+            .set("fill", "red")
+            .set("cx", view_box.0 as f32 * x)
+            .set("cy", view_box.1 as f32 * y)
+            .set("r", view_box.0 as f32 / 200.)
+
+    }).into_iter();
+
+    for c in iter {
+        document = document.add(c);
+    }
+
+    // let bf = svg::read(include_str!("butterfly.svg")).unwrap();
+    // bf.
+
+    svg::save(file_name, &document).unwrap();
+}

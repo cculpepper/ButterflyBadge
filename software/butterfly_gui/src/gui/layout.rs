@@ -223,10 +223,6 @@ impl LayoutCreator for RadialLayoutCreator {
 
 
 
-
-
-
-
 pub struct MultiLayoutCreator {
     selected_idx: usize,
     creators: Vec<(String, Box<dyn LayoutCreator>)>,
@@ -262,10 +258,18 @@ impl LayoutCreator for MultiLayoutCreator {
                 ui.selectable_value(&mut self.selected_idx, idx, &vis.0);
             }
         });
+        let selected_tup = &mut self.creators[self.selected_idx];
 
+        if ui.button("Save Svg").clicked() {
+            let layout = selected_tup.1.create();
+            
+            save_to_svg(layout.into_iter().map(|led| { 
+                (led.uv.x,led.uv.y)
+            }), "points.svg");
+
+        }
         ui.separator();
 
-        let selected_tup = &mut self.creators[self.selected_idx];
         (self.selected_idx != last_idx) |
             selected_tup.1.show(ui)
 
