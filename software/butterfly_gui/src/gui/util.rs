@@ -115,3 +115,20 @@ pub fn save_to_svg(points: impl Iterator<Item =(f32,f32)>, file_name: &str) {
 
     svg::save(file_name, &document).unwrap();
 }
+
+pub fn save_to_csv(points: impl Iterator<Item =(f32,f32)>, file_name: &str) {
+    extern crate csv;
+
+
+    let mut csv_writer = csv::Writer::from_path(file_name).unwrap();
+    csv_writer.write_record(&["LED_NUM", "x", "y"]);
+    for (i, pt) in points.enumerate(){
+        csv_writer.serialize((
+            i,
+            pt.0,
+            pt.1,
+        ));
+    }
+
+    csv_writer.flush();
+}

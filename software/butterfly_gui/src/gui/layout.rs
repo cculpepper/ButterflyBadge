@@ -267,6 +267,12 @@ impl LayoutCreator for MultiLayoutCreator {
                 (led.uv.x,led.uv.y)
             }), "points.svg");
 
+        } else if ui.button("Save Csv").clicked() {
+            let layout = selected_tup.1.create();
+            save_to_csv(layout.into_iter().map(|led| {
+                (led.uv.x,led.uv.y)
+            }), "points.csv");
+
         }
         ui.separator();
 
