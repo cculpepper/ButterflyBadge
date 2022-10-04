@@ -143,6 +143,10 @@ impl RadialLayoutCreator {
 
         let mut angle = start_angle;
         while angle < start_angle+self.cone_size {
+            if points.len() > 1000 {
+                return;
+            }
+
             let candidate = RadialLayoutCreator::angle_dist_to_vec(p, angle, self.radius);
 
             if self.test_candidate(candidate, points.as_slice()) {
@@ -194,6 +198,10 @@ impl LayoutCreator for RadialLayoutCreator {
     }
 
     fn create(&self) -> Vec<Led> {
+        if !self.step_angle.is_finite() || self.step_angle <= 0. || !self.radius.is_finite() || self.radius <= 0. {
+            return Vec::new();
+        }
+
         let mut points = Vec::new();
 
         if self.test_candidate(self.start, points.as_slice()) {
