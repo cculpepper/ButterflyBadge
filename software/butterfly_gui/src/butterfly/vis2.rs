@@ -53,17 +53,20 @@ impl MyVis2 {
           (idx, dist_to(led.uv))
         }).collect();
       
-      sorted.sort_by(|(_, distA), (_,distB)| {
+        sorted.sort_by(|(_, distA), (_,distB)| {
           distA.partial_cmp(distB).unwrap()
-      });
+        });
 
-      let rings: Vec<Vec<usize>> = sorted
-        .chunks(sorted.len()/config.ring_count as usize)
-        .map(|chunk| {
-          chunk.iter().map(|&(idx,_)| idx).collect()
-        })      
-        .collect();
-        
+        let rings: Vec<Vec<usize>> = if ctx.leds.len() < config.ring_count as usize {
+            Vec::new()
+        } else {
+            sorted.chunks(sorted.len()/config.ring_count as usize)
+                .map(|chunk| {
+                    chunk.iter().map(|&(idx,_)| idx).collect()
+                })
+                .collect()
+        };
+
       Self {
         rings,
         config,

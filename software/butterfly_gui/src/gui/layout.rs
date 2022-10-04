@@ -203,21 +203,22 @@ impl LayoutCreator for RadialLayoutCreator {
         }
 
         let mut points = Vec::new();
-
         if self.test_candidate(self.start, points.as_slice()) {
             points.push(self.start);
-
-            let mut angle = 0.;
-            while angle < TAU {
-                let candidate = RadialLayoutCreator::angle_dist_to_vec(self.start, angle, self.radius);
-
-                if self.test_candidate(candidate, points.as_slice()) {
-                    points.push(candidate);
-                    self.visit_recursive(candidate, angle, &mut points);
-                }
-                angle += self.step_angle;
-            }
+            self.visit_recursive(self.start, 0., &mut points);
         }
+
+        let mut angle = 0.;
+        while angle < TAU {
+            let candidate = RadialLayoutCreator::angle_dist_to_vec(self.start, angle, self.radius);
+
+            if self.test_candidate(candidate, points.as_slice()) {
+                points.push(candidate);
+                self.visit_recursive(candidate, angle, &mut points);
+            }
+            angle += self.step_angle;
+        }
+
 
         points.into_iter().enumerate().map(|(idx, uv)| {
             Led {
