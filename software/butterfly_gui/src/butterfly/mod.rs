@@ -1,10 +1,10 @@
 
-pub mod vis;
-pub mod vis2;
-
 use std::cell::Cell;
 
 use eframe::egui;
+
+pub mod vis;
+pub mod vis2;
 
 pub type Vec2 = egui::Vec2;
 pub type Color32 = egui::Color32;

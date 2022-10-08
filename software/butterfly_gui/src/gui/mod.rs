@@ -1,36 +1,45 @@
-mod app;
-mod layout;
 
 use eframe::egui;
 
-use crate::butterfly::vis2::{MyVis2Config, MyVis2};
 use crate::butterfly::{BfContext, BfVis, Butterfly};
-use crate::butterfly::vis::{BfVis1, SolidColorVis};
+use crate::butterfly::vis2;
+use crate::butterfly::vis;
+
+mod app;
+mod layout;
 
 use layout::*;
+
 pub use app::MyApp;
 
 pub trait ContextCreator {
+
     /// Display the creator widget and return whether the settings changed.
     fn show(&mut self, ui: &mut egui::Ui) -> bool;
 
     /// Create a Butterfly context.
     fn create(&self) -> BfContext;
+
 }
 
 pub trait VisCreator {
+
     /// Display the creator widget and return whether the settings changed.
     fn show(&mut self, ui: &mut egui::Ui) -> bool;
 
     // Create a Butterfly visual driver
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis>;
+
 }
 
 pub trait ButterflyCreator {
+
     /// Display the creator widget and return whether the settings changed.
     fn show(&mut self, ui: &mut egui::Ui) -> bool;
+
     // Create a Butterfly visual driver
     fn create(&self) -> Option<Butterfly>;
+
 }
 
 struct SimpleContextCreator {
@@ -48,6 +57,7 @@ impl Default for SimpleContextCreator {
 }
 
 impl ContextCreator for SimpleContextCreator {
+
     fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
 
@@ -70,6 +80,7 @@ impl ContextCreator for SimpleContextCreator {
             leds: self.layout.create(),
         }
     }
+
 }
 
 struct SolidColorVisCreator {
@@ -87,27 +98,31 @@ impl Default for SolidColorVisCreator {
 struct FirstVisCreator {}
 
 impl VisCreator for FirstVisCreator {
+
     fn show(&mut self, _ui: &mut egui::Ui) -> bool {
         false
     }
 
     fn create(&self, _ctx: &BfContext) -> Box<dyn BfVis> {
-        Box::new(BfVis1)
+        Box::new(vis::BfVis1)
     }
+
 }
 
-// todo viscreator should have type bounds
+// todo VisCreator should have type bounds
 impl VisCreator for SolidColorVisCreator {
+
     fn show(&mut self, ui: &mut egui::Ui) -> bool {
         ui.color_edit_button_srgba(&mut self.color).changed()
     }
 
     fn create(&self, _ctx: &BfContext) -> Box<dyn BfVis> {
-        Box::new(SolidColorVis { color: self.color })
+        Box::new(vis::SolidColorVis { color: self.color })
     }
+
 }
 
-impl VisCreator for MyVis2Config {
+impl VisCreator for vis2::MyVis2Config {
 
     fn show(&mut self, ui: &mut egui::Ui) -> bool {
         ui.label("ring_count");
@@ -122,11 +137,10 @@ impl VisCreator for MyVis2Config {
     }
 
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
-        Box::new(MyVis2::from_ctx_cfg(ctx, *self))
+        Box::new(vis2::MyVis2::from_ctx_cfg(ctx, *self))
     }
 
 }
-
 
 struct MultiVisCreator {
     selected_idx: usize,
@@ -140,7 +154,7 @@ impl Default for MultiVisCreator {
         
         vis_creators.push((
             String::from("Vis2"),
-            Box::new(MyVis2Config::default()),
+            Box::new(vis2::MyVis2Config::default()),
         ));
         
         vis_creators.push((
@@ -190,14 +204,12 @@ pub struct SimpleButterflyCreator {
 }
 
 impl Default for SimpleButterflyCreator {
-
     fn default() -> Self {
         Self {
             context_creator: Box::new(SimpleContextCreator::default()),
             vis_creator: Box::new(MultiVisCreator::default()),
         }
     }
-
 }
 
 impl ButterflyCreator for SimpleButterflyCreator {
@@ -228,4 +240,3 @@ impl ButterflyCreator for SimpleButterflyCreator {
     }
 
 }
-

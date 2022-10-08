@@ -18,62 +18,61 @@ pub struct GridLayoutCreator {
 }
 
 impl Default for GridLayoutCreator {
-
-  fn default() -> Self {
-      let image = egui_extras::image::load_svg_bytes(include_bytes!("butterfly.svg")).unwrap();
-      Self {
-          grid_size: [40,40],
-          collide_detector: create_collide_detector(image),
-      }
-  }
+    fn default() -> Self {
+        let image = egui_extras::image::load_svg_bytes(include_bytes!("butterfly.svg")).unwrap();
+        Self {
+            grid_size: [40,40],
+            collide_detector: create_collide_detector(image),
+        }
+    }
 }
 
 impl LayoutCreator for GridLayoutCreator {
 
-  fn show(&mut self, ui: &mut egui::Ui) -> bool {
-      let mut changed = false;
-      ui.horizontal(|ui: &mut egui::Ui| {
-          ui.label("grid_size_x");
-          changed |= ui.add(
-              egui::Slider::new(&mut self.grid_size[0], 1..=100)
-          ).changed();
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
+        let mut changed = false;
+        ui.horizontal(|ui: &mut egui::Ui| {
+            ui.label("grid_size_x");
+            changed |= ui.add(
+                egui::Slider::new(&mut self.grid_size[0], 1..=100)
+            ).changed();
 
-          ui.label("grid_size_y");
-          changed |= ui.add(
+            ui.label("grid_size_y");
+            changed |= ui.add(
               egui::Slider::new(&mut self.grid_size[1], 1..=100)
-          ).changed();
-      });
-      changed
-  }
+            ).changed();
+        });
+        changed
+    }
 
-  fn create(&self) -> Vec<Led> {
-      let filter_uv = |uv: [f64; 2]| -> Option<Vec2> {
-          if (self.collide_detector)(uv) {
-              Some(Vec2::new(uv[0] as f32, uv[1] as f32))
-          } else {
-              None
-          }
-      };
+    fn create(&self) -> Vec<Led> {
+        let filter_uv = |uv: [f64; 2]| -> Option<Vec2> {
+            if (self.collide_detector)(uv) {
+                Some(Vec2::new(uv[0] as f32, uv[1] as f32))
+            } else {
+                None
+            }
+        };
 
-      let grid = SimpleGrid { size: self.grid_size };
+        let grid = SimpleGrid { size: self.grid_size };
+        let mut uvs: Vec<Vec2> = grid.iter()
+            .map(|p| grid.uv_for_pos(p))
+            .filter_map(filter_uv)
+            .collect();
 
-      let mut uvs: Vec<Vec2> = grid.iter()
-          .map(|p| grid.uv_for_pos(p))
-          .filter_map(filter_uv)
-          .collect();
+        adjust_uvs_to_fill(uvs.as_mut_slice());
 
-      adjust_uvs_to_fill(uvs.as_mut_slice());
+        uvs.into_iter()
+            .enumerate()
+            .map(|(idx, uv)| {
+                Led {
+                    idx,
+                    uv,
+                    color: Cell::new(egui::Color32::WHITE),
+                }
+            }).collect()
+    }
 
-      uvs.into_iter()
-          .enumerate()
-          .map(|(idx, uv)| {
-              Led {
-                  idx,
-                  uv,
-                  color: Cell::new(egui::Color32::WHITE),
-              }
-          }).collect()
-  }
 }
 
 fn create_collide_detector(image: egui::ColorImage) -> Box<dyn Fn([f64; 2]) -> bool> {
@@ -229,6 +228,7 @@ impl LayoutCreator for RadialLayoutCreator {
             }
         }).collect()
     }
+
 }
 
 
@@ -422,4 +422,3 @@ fn save_to_csv(points: impl Iterator<Item =(f32,f32)>, file_name: &str) {
         )).unwrap();
     }
 }
-
