@@ -3,7 +3,7 @@ use std::ops::Rem;
 
 use eframe::egui;
 
-use super::{ BfContext, BfVis, Color32, Hsva };
+use super::{BfContext, BfVis, Color32, Hsva};
 
 pub struct SolidColorVis {
     pub color: egui::Color32,
@@ -36,7 +36,7 @@ fn hue_for_uv(uv: egui::Vec2) -> f32 {
 // offset sin wave for saturation
 // fixed color space
 fn color_fn_1(uv: egui::Vec2, time: f32) -> egui::Color32 {
-    const TIME_FACTOR: f32 = 1./5.;
+    const TIME_FACTOR: f32 = 1. / 5.;
 
     const WAVELENGTH: f32 = 300.;
     const SATURATION_RANGE: [f32; 2] = [0.2, 1.0];
@@ -53,7 +53,7 @@ fn color_fn_1(uv: egui::Vec2, time: f32) -> egui::Color32 {
 
     let hue = {
         let offset_uv = egui::Vec2 {
-            x: (uv.x + time_t*0.5).rem(1.0),
+            x: (uv.x + time_t * 0.5).rem(1.0),
             y: uv.y,
         };
 
@@ -64,9 +64,8 @@ fn color_fn_1(uv: egui::Vec2, time: f32) -> egui::Color32 {
         h: hue,
         s: x,
         v: 1.0,
-        a: 1.0
+        a: 1.0,
     };
 
     Color32::from(hsva)
 }
-

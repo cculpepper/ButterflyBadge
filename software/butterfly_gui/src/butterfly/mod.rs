@@ -1,4 +1,3 @@
-
 use std::cell::Cell;
 
 use eframe::egui;
@@ -12,7 +11,7 @@ pub type Hsva = egui::color::Hsva;
 
 pub struct Butterfly {
     pub ctx: BfContext,
-    pub vis: Box<dyn BfVis>
+    pub vis: Box<dyn BfVis>,
 }
 
 pub struct BfContext {
