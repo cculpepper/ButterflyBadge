@@ -1,30 +1,18 @@
 mod app;
-mod util;
 mod layout;
 
-use std::cell::Cell;
-use std::ops::{Mul, Sub};
-use eframe::epaint::CircleShape;
-use egui_extras::RetainedImage;
-use eframe::egui::{Pos2};
+use eframe::egui;
 
 use crate::butterfly::vis2::{MyVis2Config, MyVis2};
-use crate::butterfly::{BfContext, BfVis, Butterfly, Color32, egui, Led, Vec2};
-use crate::butterfly::egui::{ColorImage, Response, Sense, Ui};
+use crate::butterfly::{BfContext, BfVis, Butterfly};
 use crate::butterfly::vis::{BfVis1, SolidColorVis};
 
 use layout::*;
-use util::*;
 pub use app::MyApp;
-
-pub trait LayoutCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool;
-    fn create(&self) -> Vec<Led>;
-}
 
 pub trait ContextCreator {
     /// Display the creator widget and return whether the settings changed.
-    fn show(&mut self, ui: &mut Ui) -> bool;
+    fn show(&mut self, ui: &mut egui::Ui) -> bool;
 
     /// Create a Butterfly context.
     fn create(&self) -> BfContext;
@@ -32,7 +20,7 @@ pub trait ContextCreator {
 
 pub trait VisCreator {
     /// Display the creator widget and return whether the settings changed.
-    fn show(&mut self, ui: &mut Ui) -> bool;
+    fn show(&mut self, ui: &mut egui::Ui) -> bool;
 
     // Create a Butterfly visual driver
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis>;
@@ -40,13 +28,10 @@ pub trait VisCreator {
 
 pub trait ButterflyCreator {
     /// Display the creator widget and return whether the settings changed.
-    fn show(&mut self, ui: &mut Ui) -> bool;
+    fn show(&mut self, ui: &mut egui::Ui) -> bool;
     // Create a Butterfly visual driver
     fn create(&self) -> Option<Butterfly>;
 }
-
-
-
 
 struct SimpleContextCreator {
     time: f32,
@@ -63,10 +48,10 @@ impl Default for SimpleContextCreator {
 }
 
 impl ContextCreator for SimpleContextCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
 
-        ui.horizontal(|ui: &mut Ui| {
+        ui.horizontal(|ui: &mut egui::Ui| {
             ui.label("start_time");
             changed |= ui.add(egui::DragValue::new(&mut self.time).speed(1.)).changed();
         });
@@ -88,13 +73,13 @@ impl ContextCreator for SimpleContextCreator {
 }
 
 struct SolidColorVisCreator {
-    color: Color32,
+    color: egui::Color32,
 }
 
 impl Default for SolidColorVisCreator {
     fn default() -> Self {
         Self {
-            color: Color32::LIGHT_BLUE,
+            color: egui::Color32::LIGHT_BLUE,
         }
     }
 }
@@ -102,28 +87,29 @@ impl Default for SolidColorVisCreator {
 struct FirstVisCreator {}
 
 impl VisCreator for FirstVisCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+    fn show(&mut self, _ui: &mut egui::Ui) -> bool {
         false
     }
 
-    fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
+    fn create(&self, _ctx: &BfContext) -> Box<dyn BfVis> {
         Box::new(BfVis1)
     }
 }
 
 // todo viscreator should have type bounds
 impl VisCreator for SolidColorVisCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         ui.color_edit_button_srgba(&mut self.color).changed()
     }
 
-    fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
+    fn create(&self, _ctx: &BfContext) -> Box<dyn BfVis> {
         Box::new(SolidColorVis { color: self.color })
     }
 }
 
 impl VisCreator for MyVis2Config {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         ui.label("ring_count");
 
         let mut changed = false;
@@ -138,6 +124,7 @@ impl VisCreator for MyVis2Config {
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
         Box::new(MyVis2::from_ctx_cfg(ctx, *self))
     }
+
 }
 
 
@@ -147,6 +134,7 @@ struct MultiVisCreator {
 }
 
 impl Default for MultiVisCreator {
+
     fn default() -> Self {
         let mut vis_creators: Vec<(String, Box<dyn VisCreator>)> = Vec::new();
         
@@ -169,13 +157,15 @@ impl Default for MultiVisCreator {
             vis_creators,
         }
     }
+
 }
 
 impl VisCreator for MultiVisCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let last_idx = self.selected_idx;
 
-        ui.horizontal_wrapped(|ui: &mut Ui| {
+        ui.horizontal_wrapped(|ui: &mut egui::Ui| {
             for (idx, vis) in self.vis_creators.iter().enumerate() {
                 ui.selectable_value(&mut self.selected_idx, idx, &vis.0);
             }
@@ -191,6 +181,7 @@ impl VisCreator for MultiVisCreator {
     fn create(&self, ctx: &BfContext) -> Box<dyn BfVis> {
         self.vis_creators[self.selected_idx].1.create(ctx)
     }
+
 }
 
 pub struct SimpleButterflyCreator {
@@ -199,16 +190,19 @@ pub struct SimpleButterflyCreator {
 }
 
 impl Default for SimpleButterflyCreator {
+
     fn default() -> Self {
         Self {
             context_creator: Box::new(SimpleContextCreator::default()),
             vis_creator: Box::new(MultiVisCreator::default()),
         }
     }
+
 }
 
 impl ButterflyCreator for SimpleButterflyCreator {
-    fn show(&mut self, ui: &mut Ui) -> bool {
+
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
         let mut changed = false;
 
         ui.label("Context Creator");
@@ -232,5 +226,6 @@ impl ButterflyCreator for SimpleButterflyCreator {
             vis,
         })
     }
+
 }
 

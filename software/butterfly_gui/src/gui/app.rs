@@ -1,18 +1,13 @@
-use std::ops::{Mul, Sub};
-use eframe::egui;
-use eframe::egui::{Color32, ColorImage, Sense,Pos2};
-use eframe::egui::CursorIcon::Text;
-use eframe::epaint::CircleShape;
-use egui_extras::RetainedImage;
 
-use crate::butterfly::{BfContext, BfVis, Butterfly, Led, Vec2,};
-use crate::butterfly::egui::Ui;
-use crate::butterfly::vis::BfVis1;
-use crate::gui::{ButterflyCreator, SimpleButterflyCreator};
+use eframe::egui;
+use eframe::epaint;
+use eframe::emath;
+
+use crate::butterfly::{ Butterfly, Vec2 };
+use super::{ ButterflyCreator, SimpleButterflyCreator };
 
 pub struct MyApp {
-    butterfly_retained_image: RetainedImage,
-    butterfly_color_image: ColorImage,
+    butterfly_color_image: egui::ColorImage,
 
     butterfly_creator: Box<dyn ButterflyCreator>,
     butterfly: Option<Butterfly>,
@@ -35,10 +30,6 @@ impl Default for MyApp {
         let butterfly = butterfly_creator.create();
 
         Self {
-            butterfly_retained_image: RetainedImage::from_color_image(
-                "butterfly.svg",
-                image.clone(),
-            ),
             butterfly_color_image: image,
             butterfly_creator,
             butterfly,
@@ -54,34 +45,27 @@ impl Default for MyApp {
 
 impl MyApp {
 
-    // fn set_leds_from_creator(&mut self) {
-    //     self.butterfly_context = BfContext {
-    //         leds: self.led_layout_creator.layout()
-    //         ..self.butterfly_context
-    //     };
-    // }
-
-    fn show_butterfly(&self, size: Vec2, ui: &mut Ui) {
-        let PADDING: Vec2 = Vec2::new(20.,20.);
-        let LED_SCALE_BASE = 50. / 1200.;
+    fn show_butterfly(&self, size: Vec2, ui: &mut egui::Ui) {
+        let padding: Vec2 = Vec2::new(20., 20.);
+        let led_scale_base = 50. / 1200.;
 
         if let Some(ref bf) = self.butterfly {
-            let (rect, resp) = ui.allocate_exact_size(size, Sense::hover());
+            let (rect, _resp) = ui.allocate_exact_size(size, egui::Sense::hover());
             
-            let paint_region_size = rect.size() - PADDING.mul(Vec2::new(2.,2.));
-            let paint_region_start = rect.min + PADDING;
+            let paint_region_size = rect.size() - (padding * Vec2::new(2., 2.));
+            let paint_region_start = rect.min + padding;
 
-            let uv_to_pos = |uv: &Vec2| -> Pos2 {
-                Pos2 {
+            let uv_to_pos = |uv: &Vec2| -> emath::Pos2 {
+                epaint::Pos2 {
                     x: (uv.x * paint_region_size.x) + paint_region_start.x,
                     y: (uv.y * paint_region_size.y) + paint_region_start.y
                 }
             };
  
             for led in &bf.ctx.leds {
-                let circle = CircleShape {
+                let circle = epaint::CircleShape {
                     center: uv_to_pos(&led.uv),
-                    radius: rect.width() * self.led_scale * LED_SCALE_BASE,
+                    radius: rect.width() * self.led_scale * led_scale_base,
                     fill: led.color.get(),
                     stroke: Default::default()
                 };
@@ -92,10 +76,10 @@ impl MyApp {
         //self.butterfly_retained_image.show_size(ui, cursor_rect.size());
     }
 
-    fn show_app_settings(&mut self, ui: &mut Ui) {
+    fn show_app_settings(&mut self, ui: &mut egui::Ui) {
         ui.label("App Settings");
 
-        ui.horizontal_wrapped(|ui: &mut Ui| {
+        ui.horizontal_wrapped(|ui: &mut egui::Ui| {
             ui.label("paused:");
             ui.checkbox(&mut self.paused, "");
 
@@ -142,7 +126,7 @@ impl eframe::App for MyApp {
 
             ui.label(egui::RichText::new("Buterferlies are cool!")
                          .font(egui::FontId::monospace(20.))
-                         .color(Color32::GOLD).italics());
+                         .color(egui::Color32::GOLD).italics());
 
 
             self.show_app_settings(ui);
@@ -166,7 +150,7 @@ impl eframe::App for MyApp {
 
         egui::TopBottomPanel::bottom("panel").show(ctx, |ui: &mut egui::Ui| {
             if let Some(bf) = self.butterfly.as_ref() {
-                ui.horizontal_wrapped(|ui: &mut Ui| {
+                ui.horizontal_wrapped(|ui: &mut egui::Ui| {
                     ui.label(format!("butterfly_time(s) {}", bf.ctx.time));
                     ui.label(format!("led_count {}", bf.ctx.leds.len()));
                 });

@@ -1,18 +1,7 @@
 
-use super::{BfVis,BfContext, Vec2};
+use super::{ BfVis, BfContext, Vec2, Color32, Hsva };
 
-use eframe::epaint::{Color32, color::Hsva};
-use nalgebra::{Vector3,Vector2};
-
-
-pub fn vis_test() {
-  let x: nalgebra::Vector3<f64> = Vector3::new(0.,0.,0.);
-
-  // x.
-
-  // println!("{}", x);
- 
-}
+use nalgebra::{ Vector2 };
 
 pub struct MyVis2 {
   rings: Vec<Vec<usize>>,
@@ -53,8 +42,8 @@ impl MyVis2 {
           (idx, dist_to(led.uv))
         }).collect();
       
-        sorted.sort_by(|(_, distA), (_,distB)| {
-          distA.partial_cmp(distB).unwrap()
+        sorted.sort_by(|(_, a), (_,b)| {
+          a.partial_cmp(b).unwrap()
         });
 
         let rings: Vec<Vec<usize>> = if ctx.leds.len() < config.ring_count as usize {
@@ -102,22 +91,4 @@ impl BfVis for MyVis2 {
     }
 
   }
-}
-
-
-
-
-
-#[cfg(tests)]
-mod tests {
-
-  #[test]
-  fn test1() {
-
-
-
-
-
-  }
-
 }
