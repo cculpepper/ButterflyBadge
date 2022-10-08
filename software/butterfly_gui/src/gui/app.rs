@@ -47,7 +47,7 @@ impl Default for MyApp {
             framerate: 60,
             update_frame_interval: 10,
             time_scale: 1.,
-            led_scale: 8.,
+            led_scale: 1.,
         }
     }
 }
@@ -63,7 +63,7 @@ impl MyApp {
 
     fn show_butterfly(&self, size: Vec2, ui: &mut Ui) {
         let PADDING: Vec2 = Vec2::new(20.,20.);
-        let LED_SCALE_BASE = 1. / 1200.;
+        let LED_SCALE_BASE = 50. / 1200.;
 
         if let Some(ref bf) = self.butterfly {
             let (rect, resp) = ui.allocate_exact_size(size, Sense::hover());

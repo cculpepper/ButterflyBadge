@@ -1,7 +1,6 @@
 
 use std::cell::Cell;
 use std::f64::consts::{PI, TAU, SQRT_2};
-use std::sync::mpsc::channel;
 
 use crate::butterfly::{BfContext, BfVis, Butterfly, Color32, egui, Led, Vec2};
 use crate::butterfly::egui::{ColorImage, Response, Sense, Ui};
@@ -45,7 +44,7 @@ impl LayoutCreator for GridLayoutCreator {
   }
 
   fn create(&self) -> Vec<Led> {
-      let filter_uv = |uv: [f64; 2]| -> Option<Vec2>{
+      let filter_uv = |uv: [f64; 2]| -> Option<Vec2> {
           if (self.collide_detector)(uv) {
               Some(Vec2::new(uv[0] as f32, uv[1] as f32))
           } else {

@@ -11,14 +11,12 @@ impl SimpleGrid {
             size: [width, height],
         }
     }
-
     pub fn uv_for_pos(&self, pos: [i32; 2]) -> [f64; 2] {
         [
             (pos[0] as f64 / self.size[0] as f64),
             (pos[1] as f64 / self.size[1] as f64),
         ]
     }
-
     pub fn iter(self) -> NumIterator2d {
         return NumIterator2d {
             cur: [0,0],
