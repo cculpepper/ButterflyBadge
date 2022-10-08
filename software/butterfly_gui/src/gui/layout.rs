@@ -98,7 +98,7 @@ impl Default for RadialLayoutCreator {
             radius: 0.04,
             step_angle: consts::PI / 30.,
             cone_size: 7. / 4. * consts::PI,
-            start: [0.5, 0.5],
+            start: [0.1, 0.5],
 
             collide_detector: create_collide_detector(image),
         }

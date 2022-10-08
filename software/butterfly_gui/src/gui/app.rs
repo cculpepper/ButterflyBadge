@@ -2,8 +2,10 @@ use eframe::egui;
 use eframe::emath;
 use eframe::epaint;
 
+use egui::Vec2;
+
 use super::{ButterflyCreator, SimpleButterflyCreator};
-use crate::butterfly::{Butterfly, Vec2};
+use crate::butterfly::{Butterfly, Color32};
 
 pub struct MyApp {
     butterfly_color_image: egui::ColorImage,
@@ -12,12 +14,12 @@ pub struct MyApp {
     butterfly: Option<Butterfly>,
 
     frames_elapsed: i64,
-
     paused: bool,
     framerate: i32,
     update_frame_interval: i32,
     time_scale: f32,
     led_scale: f32,
+    show_border: bool,
 }
 
 impl Default for MyApp {
@@ -38,6 +40,7 @@ impl Default for MyApp {
             update_frame_interval: 10,
             time_scale: 1.,
             led_scale: 1.,
+            show_border: true,
         }
     }
 }
@@ -45,31 +48,50 @@ impl Default for MyApp {
 impl MyApp {
     fn show_butterfly(&self, size: Vec2, ui: &mut egui::Ui) {
         let padding: Vec2 = Vec2::new(20., 20.);
-        let led_scale_base = 50. / 1200.;
+        let led_scale_base = 15. / 1200.;
 
         if let Some(ref bf) = self.butterfly {
-            let (rect, _resp) = ui.allocate_exact_size(size, egui::Sense::hover());
+            ui.vertical_centered(|ui: &mut egui::Ui| {
+                let (rect, _resp) = ui.allocate_exact_size(size, egui::Sense::hover());
 
-            let paint_region_size = rect.size() - (padding * Vec2::new(2., 2.));
-            let paint_region_start = rect.min + padding;
+                let paint_region_size = rect.size() - (padding * Vec2::new(2., 2.));
+                let paint_region_start = rect.min + padding;
 
-            let uv_to_pos = |uv: &Vec2| -> emath::Pos2 {
-                epaint::Pos2 {
-                    x: (uv.x * paint_region_size.x) + paint_region_start.x,
-                    y: (uv.y * paint_region_size.y) + paint_region_start.y,
+                if self.show_border {
+                    let paint_region_rect = epaint::Rect::from_two_pos(
+                        paint_region_start,
+                        epaint::Pos2::new(
+                            paint_region_start.x + paint_region_size.x,
+                            paint_region_start.y + paint_region_size.y,
+                        ),
+                    );
+                    let border = egui::Stroke::new(2., Color32::GRAY);
+                    ui.painter().rect(
+                        paint_region_rect,
+                        egui::Rounding::none(),
+                        Color32::TRANSPARENT,
+                        border,
+                    );
                 }
-            };
 
-            for led in &bf.ctx.leds {
-                let circle = epaint::CircleShape {
-                    center: uv_to_pos(&led.uv),
-                    radius: rect.width() * self.led_scale * led_scale_base,
-                    fill: led.color.get(),
-                    stroke: Default::default(),
+                let uv_to_pos = |uv: &Vec2| -> emath::Pos2 {
+                    epaint::Pos2 {
+                        x: (uv.x * paint_region_size.x) + paint_region_start.x,
+                        y: (uv.y * paint_region_size.y) + paint_region_start.y,
+                    }
                 };
 
-                ui.painter().add(circle);
-            }
+                for led in &bf.ctx.leds {
+                    let circle = epaint::CircleShape {
+                        center: uv_to_pos(&led.uv),
+                        radius: rect.width() * self.led_scale * led_scale_base,
+                        fill: led.color.get(),
+                        stroke: Default::default(),
+                    };
+
+                    ui.painter().add(circle);
+                }
+            });
         }
         //self.butterfly_retained_image.show_size(ui, cursor_rect.size());
     }
@@ -92,6 +114,9 @@ impl MyApp {
 
             ui.label("led_scale:");
             ui.add(egui::Slider::new(&mut self.led_scale, (0.)..=20.));
+
+            ui.label("show_border:");
+            ui.checkbox(&mut self.show_border, "");
         });
     }
 
@@ -139,14 +164,14 @@ impl eframe::App for MyApp {
             });
 
         egui::CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {
-            // todo calculate the constraining aspect ratio part
-            let butterfly_size = Vec2 {
-                x: ui.available_width(),
-                y: ui.available_width()
-                    * (self.butterfly_color_image.height() as f32
-                        / self.butterfly_color_image.width() as f32),
+            let bf_size = Vec2 {
+                x: self.butterfly_color_image.width() as f32,
+                y: self.butterfly_color_image.height() as f32,
             };
-            self.show_butterfly(butterfly_size, ui);
+            self.show_butterfly(
+                calculate_constrained_paint_size(bf_size, ui.available_size()),
+                ui,
+            );
         });
 
         egui::TopBottomPanel::bottom("panel").show(ctx, |ui: &mut egui::Ui| {
@@ -157,5 +182,47 @@ impl eframe::App for MyApp {
                 });
             }
         });
+    }
+}
+
+fn calculate_constrained_paint_size(shape: Vec2, available: Vec2) -> Vec2 {
+    let shape_aspect = shape.x / shape.y;
+    let available_aspect = available.x / available.y;
+
+    if available_aspect >= shape_aspect {
+        Vec2 {
+            x: available.y * shape_aspect,
+            y: available.y,
+        }
+    } else {
+        Vec2 {
+            x: available.x,
+            y: available.x / shape_aspect,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_constrained_paint_size() {
+        assert_eq!(
+            calculate_constrained_paint_size(Vec2::new(200., 100.), Vec2::new(100., 100.)),
+            Vec2::new(100., 50.)
+        );
+        assert_eq!(
+            calculate_constrained_paint_size(Vec2::new(200., 200.), Vec2::new(200., 100.)),
+            Vec2::new(100., 100.)
+        );
+        assert_eq!(
+            calculate_constrained_paint_size(Vec2::new(100., 200.), Vec2::new(100., 100.)),
+            Vec2::new(50., 100.)
+        );
+        assert_eq!(
+            calculate_constrained_paint_size(Vec2::new(25., 50.), Vec2::new(100., 100.)),
+            Vec2::new(50., 100.)
+        );
     }
 }
