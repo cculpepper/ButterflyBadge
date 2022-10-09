@@ -6,6 +6,7 @@ use egui::Vec2;
 
 use super::{ButterflyCreator, SimpleButterflyCreator};
 use crate::butterfly::{Butterfly, Color32};
+use crate::butterfly::vis::SolidColorVis;
 
 pub struct MyApp {
     butterfly_color_image: egui::ColorImage,
@@ -81,7 +82,7 @@ impl MyApp {
                     }
                 };
 
-                for led in &bf.ctx.leds {
+                for led in &bf.leds {
                     let circle = epaint::CircleShape {
                         center: uv_to_pos(&led.uv),
                         radius: rect.width() * self.led_scale * led_scale_base,
@@ -120,12 +121,14 @@ impl MyApp {
         });
     }
 
-    fn update_context(&mut self, dt: f32) {
+    fn update_butterfly(&mut self, dt: f32) {
         if self.butterfly.is_some() {
             let mut bf = self.butterfly.as_mut().unwrap();
 
-            bf.ctx.time += dt;
-            bf.vis.as_mut().update(&bf.ctx);
+            bf.time += dt;
+            let mut vis = bf.vis.replace(Box::new(SolidColorVis{ color: Default::default() }));
+            vis.update(&bf);
+            bf.vis.set(vis);
         }
     }
 }
@@ -138,7 +141,7 @@ impl eframe::App for MyApp {
             if self.frames_elapsed % self.update_frame_interval as i64 == 0 {
                 let dt =
                     (self.update_frame_interval as f32 / self.framerate as f32) * self.time_scale;
-                self.update_context(dt);
+                self.update_butterfly(dt);
             }
             ctx.request_repaint();
         }
@@ -177,8 +180,8 @@ impl eframe::App for MyApp {
         egui::TopBottomPanel::bottom("panel").show(ctx, |ui: &mut egui::Ui| {
             if let Some(bf) = self.butterfly.as_ref() {
                 ui.horizontal_wrapped(|ui: &mut egui::Ui| {
-                    ui.label(format!("butterfly_time(s) {}", bf.ctx.time));
-                    ui.label(format!("led_count {}", bf.ctx.leds.len()));
+                    ui.label(format!("butterfly_time(s) {}", bf.time));
+                    ui.label(format!("led_count {}", bf.leds.len()));
                 });
             }
         });

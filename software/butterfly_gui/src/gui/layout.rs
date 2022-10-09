@@ -1,14 +1,12 @@
-use std::cell::Cell;
 use std::f64::consts;
 
 use eframe::egui;
-use eframe::emath::Vec2;
 
-use crate::butterfly::Led;
+use super::{Layout,Vec2};
 
 pub trait LayoutCreator {
     fn show(&mut self, ui: &mut egui::Ui) -> bool;
-    fn create(&self) -> Vec<Led>;
+    fn create(&self) -> Layout;
 }
 
 pub struct GridLayoutCreator {
@@ -43,7 +41,7 @@ impl LayoutCreator for GridLayoutCreator {
         changed
     }
 
-    fn create(&self) -> Vec<Led> {
+    fn create(&self) -> Layout {
         let filter_uv = |uv: [f64; 2]| -> Option<Vec2> {
             if (self.collide_detector)(uv) {
                 Some(Vec2::new(uv[0] as f32, uv[1] as f32))
@@ -62,15 +60,7 @@ impl LayoutCreator for GridLayoutCreator {
             .collect();
 
         adjust_uvs_to_fill(uvs.as_mut_slice());
-
-        uvs.into_iter()
-            .enumerate()
-            .map(|(idx, uv)| Led {
-                idx,
-                uv,
-                color: Cell::new(egui::Color32::WHITE),
-            })
-            .collect()
+        Layout::from_points(uvs)
     }
 }
 
@@ -186,13 +176,13 @@ impl LayoutCreator for RadialLayoutCreator {
         changed
     }
 
-    fn create(&self) -> Vec<Led> {
+    fn create(&self) -> Layout {
         if !self.step_angle.is_finite()
             || self.step_angle <= 0.
             || !self.radius.is_finite()
             || self.radius <= 0.
         {
-            return Vec::new();
+            return Layout::from_points(Vec::new());
         }
 
         let mut points = Vec::new();
@@ -212,15 +202,14 @@ impl LayoutCreator for RadialLayoutCreator {
             angle += self.step_angle;
         }
 
-        points
+        let points_f32 = points
             .into_iter()
-            .enumerate()
-            .map(|(idx, uv)| Led {
-                idx,
-                uv: Vec2::new(uv[0] as f32, uv[1] as f32),
-                color: Cell::new(Default::default()),
+            .map(|uv| {
+                Vec2::new(uv[0] as f32, uv[1] as f32)
             })
-            .collect()
+            .collect();
+
+        Layout::from_points(points_f32)
     }
 }
 
@@ -259,16 +248,13 @@ impl LayoutCreator for MultiLayoutCreator {
         let selected_tup = &mut self.creators[self.selected_idx];
 
         if ui.button("Save Svg").clicked() {
-            let layout = selected_tup.1.create();
-
             save_to_svg(
-                layout.into_iter().map(|led| (led.uv.x, led.uv.y)),
+                &selected_tup.1.create(),
                 "points.svg",
             );
         } else if ui.button("Save Csv").clicked() {
-            let layout = selected_tup.1.create();
             save_to_csv(
-                layout.into_iter().map(|led| (led.uv.x, led.uv.y)),
+                &selected_tup.1.create(),
                 "points.csv",
             );
         }
@@ -277,7 +263,7 @@ impl LayoutCreator for MultiLayoutCreator {
         (self.selected_idx != last_idx) | selected_tup.1.show(ui)
     }
 
-    fn create(&self) -> Vec<Led> {
+    fn create(&self) -> Layout {
         self.creators[self.selected_idx].1.create()
     }
 }
@@ -360,7 +346,7 @@ fn adjust_uvs_to_fill(uvs: &mut [Vec2]) {
     });
 }
 
-fn save_to_svg(points: impl Iterator<Item = (f32, f32)>, file_name: &str) {
+fn save_to_svg(layout: &Layout, file_name: &str) {
     use svg::node::element::Circle;
     use svg::Document;
 
@@ -368,12 +354,12 @@ fn save_to_svg(points: impl Iterator<Item = (f32, f32)>, file_name: &str) {
 
     let mut document = Document::new().set("viewBox", (0, 0, view_box.0, view_box.1));
 
-    let iter = points
-        .map(|(x, y)| {
+    let iter = layout.points.iter()
+        .map(|p| {
             Circle::new()
                 .set("fill", "red")
-                .set("cx", view_box.0 as f32 * x)
-                .set("cy", view_box.1 as f32 * y)
+                .set("cx", view_box.0 as f32 * p.x)
+                .set("cy", view_box.1 as f32 * p.y)
                 .set("r", view_box.0 as f32 / 200.)
         })
         .into_iter();
@@ -385,12 +371,12 @@ fn save_to_svg(points: impl Iterator<Item = (f32, f32)>, file_name: &str) {
     svg::save(file_name, &document).unwrap();
 }
 
-fn save_to_csv(points: impl Iterator<Item = (f32, f32)>, file_name: &str) {
+fn save_to_csv(layout: &Layout, file_name: &str) {
     extern crate csv;
 
     let mut csv_writer = csv::Writer::from_path(file_name).unwrap();
     csv_writer.write_record(&["LED_NUM", "x", "y"]).unwrap();
-    for (i, pt) in points.enumerate() {
-        csv_writer.serialize((i, pt.0, pt.1)).unwrap();
+    for (i, pt) in layout.points.iter().enumerate() {
+        csv_writer.serialize((i, pt.x, pt.y)).unwrap();
     }
 }

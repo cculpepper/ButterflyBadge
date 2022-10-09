@@ -3,15 +3,15 @@ use std::ops::Rem;
 
 use eframe::egui;
 
-use super::{BfContext, BfVis, Color32, Hsva};
+use super::{Butterfly, BfVis, Color32, Hsva};
 
 pub struct SolidColorVis {
     pub color: egui::Color32,
 }
 
 impl BfVis for SolidColorVis {
-    fn update(&mut self, ctx: &BfContext) {
-        for led in ctx.leds.iter() {
+    fn update(&mut self, bf: &Butterfly) {
+        for led in bf.leds.iter() {
             led.color.set(self.color);
         }
     }
@@ -20,9 +20,9 @@ impl BfVis for SolidColorVis {
 pub struct BfVis1;
 
 impl BfVis for BfVis1 {
-    fn update(&mut self, ctx: &BfContext) {
-        for led in ctx.leds.iter() {
-            led.color.set(color_fn_1(led.uv, ctx.time));
+    fn update(&mut self, bf: &Butterfly) {
+        for led in bf.leds.iter() {
+            led.color.set(color_fn_1(led.uv, bf.time));
         }
     }
 }

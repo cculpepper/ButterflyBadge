@@ -10,13 +10,9 @@ pub type Color32 = egui::Color32;
 pub type Hsva = egui::color::Hsva;
 
 pub struct Butterfly {
-    pub ctx: BfContext,
-    pub vis: Box<dyn BfVis>,
-}
-
-pub struct BfContext {
     pub time: f32,
     pub leds: Vec<Led>,
+    pub vis: Cell<Box<dyn BfVis>>,
 }
 
 pub struct Led {
@@ -26,5 +22,5 @@ pub struct Led {
 }
 
 pub trait BfVis {
-    fn update(&mut self, ctx: &BfContext);
+    fn update(&mut self, bf: &Butterfly);
 }
