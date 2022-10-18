@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name "ButterflyBadge")(type "KiCad")(uri "/home/chris/Code/ButterflyBadge/Hardware/ButterflyBadge/library/ButterflyBadge.pretty")(options "")(descr ""))
+  (lib (name "XL3528RGBW")(type "KiCad")(uri "/home/chris/Code/ButterflyBadge/Hardware/ButterflyBadge/library/AB1TJKicadLibrary/XL3528RGBW.pretty")(options "")(descr ""))
+  (lib (name "badgelife_sao_v169bis")(type "KiCad")(uri "/home/chris/Code/ButterflyBadge/Hardware/ButterflyBadge/library/AB1TJKicadLibrary/external/badgelife-parts/badgelife_sao_v169bis.pretty")(options "")(descr ""))
+)
