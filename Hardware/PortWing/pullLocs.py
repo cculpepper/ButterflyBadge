@@ -19,20 +19,30 @@ port = LoadBoard(portLoc)
 stbd = LoadBoard(stbdLoc)
 
 locs = {}
+angs = {}
 
 for part in stbd.GetFootprints():
     loc = part.GetPosition()
     ref = part.GetReference()
+    rot = part.GetOrientation().AsDegrees()
+    if rot > 0:
+        rot -= 180
+    else:
+        rot += 180
+
     locs[ref] = loc
+    angs[ref] = rot
 
 for part in port.GetFootprints():
     ref = part.GetReference()
     if ref in locs:
         newLoc = locs[ref]
         newLoc[0] *= -1
+        newRot = angs[ref]
         part.SetPosition(newLoc)
+        part.SetOrientation(EDA_ANGLE(newRot, DEGREES_T))
         print("Setting location of " + str(ref))
 
-port.Save(portLoc + "mod")
+port.Save(portLoc)
 
 
