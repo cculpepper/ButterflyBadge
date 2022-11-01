@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "butterfly_gui",
+    "butterfly_pio",
+]
