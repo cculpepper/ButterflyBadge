@@ -123,14 +123,15 @@ fn main() -> ! {
 
     // Split the PIO state machine 0 into individual objects, so that
     // Ws2812 can use it:
-    let (mut pio, sm0, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let (mut pio_stbd, sm0_stbd, _, _, _) = pac.PIO0.split(&mut pac.RESETS);
+    let (mut pio_port, sm0_port, _, _, _) = pac.PIO1.split(&mut pac.RESETS);
 
     let mut ws_port = Ws2812::new(
         // Use pin 6 on the Raspberry Pi Pico (which is GPIO4 of the rp2040 chip)
         // for the LED data output:
         pins.gpio21.into_mode(),
-        &mut pio,
-        sm0,
+        &mut pio_port,
+        sm0_port,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
     );
@@ -140,13 +141,14 @@ fn main() -> ! {
         // Use pin 6 on the Raspberry Pi Pico (which is GPIO4 of the rp2040 chip)
         // for the LED data output:
         pins.gpio20.into_mode(),
-        &mut pio,
-        sm0,
+        &mut pio_stbd,
+        sm0_stbd,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
-    )
+    );
 
-    let mut leds: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
+    let mut leds_stbd: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
+    let mut leds_port: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
     let mut t = 0.0;
 
     // Bring down the overall brightness of the strip to not blow
@@ -159,6 +161,25 @@ fn main() -> ! {
     let animation_speed = 0.1;
 
     loop {
+        for (i, led) in leds_stbd.iter_mut().enumerate() {
+            // An offset to give 3 consecutive LEDs a different color:
+            let hue_offs = match i % 3 {
+                1 => 0.25,
+                2 => 0.5,
+                _ => 0.0,
+            };
+
+            let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
+            // Bring -1..1 sine range to 0..1 range:
+            let sin_01 = (sin_11 + 1.0) * 0.5;
+
+            let hue = 360.0 * sin_01;
+            let sat = 1.0;
+            let val = 1.0;
+
+            let rgb = hsv2rgb_u8(hue, sat, val);
+            *led = rgb.into();
+        }
         for (i, led) in leds_port.iter_mut().enumerate() {
             // An offset to give 3 consecutive LEDs a different color:
             let hue_offs = match i % 3 {
@@ -187,7 +208,7 @@ fn main() -> ! {
             .unwrap();
 
         // Wait a bit until calculating the next frame:
-        frame_delay.delay_ms(100); // ~60 FPS
+        frame_delay.delay_ms(1); // ~60 FPS
 
         // Increase the time counter variable and make sure it
         // stays inbetween 0.0 to 1.0 range:
