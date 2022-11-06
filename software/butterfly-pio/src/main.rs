@@ -1,5 +1,4 @@
 //! # Pico WS2812 RGB LED Example
-//!
 //! Drives 3 WS2812 LEDs connected directly to the Raspberry Pi Pico.
 //! This assumes you drive the Raspberry Pi Pico via USB power, so that VBUS
 //! delivers the 5V and at least enough amperes to drive the LEDs.
@@ -95,9 +94,9 @@ fn main() -> ! {
         pac.PLL_USB,
         &mut pac.RESETS,
         &mut watchdog,
-    )
-    .ok()
-    .unwrap();
+        )
+        .ok()
+        .unwrap();
 
     // The single-cycle I/O block controls our GPIO pins
     let sio = hal::Sio::new(pac.SIO);
@@ -108,7 +107,7 @@ fn main() -> ! {
         pac.PADS_BANK0,
         sio.gpio_bank0,
         &mut pac.RESETS,
-    );
+        );
 
     // Setup a delay for the LED blink signals:
     let mut frame_delay =
@@ -134,7 +133,7 @@ fn main() -> ! {
         sm0_port,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
-    );
+        );
 
     // Instanciate a Ws2812 LED strip:
     let mut ws_stbd = Ws2812::new(
@@ -145,7 +144,7 @@ fn main() -> ! {
         sm0_stbd,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
-    );
+        );
 
     let mut leds_stbd: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
     let mut leds_port: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
@@ -155,49 +154,81 @@ fn main() -> ! {
     // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
     // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
     // already 540mA for just 3 white LEDs!
-    let strip_brightness = 10; // Limit brightness to 64/256
+    let strip_brightness = 15; // Limit brightness to 64/256
 
     // Slow down timer by this factor (0.1 will result in 10 seconds):
-    let animation_speed = 0.1;
+    let animation_speed = 0.2;
+    let mut chase_led_num= 0;
+    let mut num_leds_on= 3;
+    let mut count = 0;
+    
+    let mut rainbow_driver = RainbowyDriver { hue_state: 0. };
 
     loop {
         for (i, led) in leds_stbd.iter_mut().enumerate() {
-            // An offset to give 3 consecutive LEDs a different color:
-            let hue_offs = match i % 3 {
-                1 => 0.25,
-                2 => 0.5,
-                _ => 0.0,
-            };
+            if ((i+chase_led_num) % num_leds_on) == 0{
+                // An offset to give 3 consecutive LEDs a different color:
 
-            let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
-            // Bring -1..1 sine range to 0..1 range:
-            let sin_01 = (sin_11 + 1.0) * 0.5;
+                let hue_offs = match i % 10 {
+                    1 => 0.25,
+                    2 => 0.5,
+                    _ => 0.0,
+                };
 
-            let hue = 360.0 * sin_01;
-            let sat = 1.0;
-            let val = 1.0;
+                let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
+                // Bring -1..1 sine range to 0..1 range:
+                let sin_01 = (sin_11 + 1.0) * 0.2;
 
-            let rgb = hsv2rgb_u8(hue, sat, val);
-            *led = rgb.into();
+                let hue = 360.0 * sin_01;
+                let sat = 1.0;
+                let val = 1.0;
+
+                let rgb = hsv2rgb_u8(hue, sat, val);
+                *led = rgb.into();
+            } else {
+                let rgb = hsv2rgb_u8(0.0,0.0,0.0);
+                *led = rgb.into();
+            }
         }
+        
         for (i, led) in leds_port.iter_mut().enumerate() {
-            // An offset to give 3 consecutive LEDs a different color:
-            let hue_offs = match i % 3 {
-                1 => 0.25,
-                2 => 0.5,
-                _ => 0.0,
-            };
+            if (in_chain(i, chase_led_num)){
 
-            let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
-            // Bring -1..1 sine range to 0..1 range:
-            let sin_01 = (sin_11 + 1.0) * 0.5;
+                let hue_offs = match i % 3 {
+                    1 => 0.25,
+                    2 => 0.5,
+                    _ => 0.0,
+                };
 
-            let hue = 360.0 * sin_01;
-            let sat = 1.0;
-            let val = 1.0;
+                let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
+                // Bring -1..1 sine range to 0..1 range:
+                let sin_01 = (sin_11 + 1.0) * 0.2;
 
-            let rgb = hsv2rgb_u8(hue, sat, val);
-            *led = rgb.into();
+                let hue = 360.0 * sin_01;
+                let sat = 1.0;
+                let val = 1.0;
+
+                let rgb = hsv2rgb_u8(hue, sat, val);
+                *led = rgb.into();
+            } else{
+                let rgb = hsv2rgb_u8(0.0,0.0,0.0);
+                *led = rgb.into();
+
+            }            
+        }
+        
+        {
+        //    rainbow_driver.update(leds_port.as_mut_slice());
+        }
+
+        count += 1;
+        if (count >= 20){
+            chase_led_num+= 1;
+            count = 0;
+
+        }
+        if (chase_led_num >= 255){
+            chase_led_num = 0;
         }
 
         // Here the magic happens and the `leds` buffer is written to the
@@ -216,6 +247,28 @@ fn main() -> ! {
         while t > 1.0 {
             t -= 1.0;
         }
+    }
+}
+
+
+trait LedUpdate {
+    fn update(&mut self, leds: &mut [RGB8]);
+}
+
+
+struct RainbowyDriver {
+    hue_state: f32,
+}
+
+impl LedUpdate for RainbowyDriver {
+    fn update(&mut self, leds: &mut [RGB8]) {
+        for (idx, led_value) in leds.iter_mut().enumerate() {
+            let hue = ((idx as f32 / 255.) + self.hue_state) % 1.0;
+            let full_value = hsv2rgb_u8(hue, 1., 1.);
+            
+            *led_value = full_value.into();
+        }
+        self.hue_state = (self.hue_state + (1./255.)) % 1.0;
     }
 }
 
@@ -248,6 +301,14 @@ pub fn hsv2rgb_u8(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
         (r.0 * 255.0) as u8,
         (r.1 * 255.0) as u8,
         (r.2 * 255.0) as u8,
-    )
+        )
+}
+
+pub fn in_chain(i: usize, num: usize) -> bool{
+    	let i_signed = i as i32;
+	let num_signed = num as i32;
+	const CHAIN_LEN: i32 = 17;
+
+	(i_signed - num_signed).abs() < CHAIN_LEN
 }
 
