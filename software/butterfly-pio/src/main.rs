@@ -74,6 +74,7 @@ use ws2812_pio::Ws2812;
 // to keep the power draw compatible with USB:
 const STRIP_LEN: usize = 256;
 
+mod frames
 #[entry]
 fn main() -> ! {
     // Grab our singleton objects

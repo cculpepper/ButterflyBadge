@@ -27,11 +27,8 @@ def printFootprints(board, wing_side, string_number, x_offset):
         ref = part.GetReference()
         if ref[1:].isnumeric():
             locs[ref] = loc
-        else:
-            print(f"{ref} is not numeric")
 
     refs = list(locs.keys())
-    print(refs)
     refs.sort(key=lambda x:int(x[1:]))
     # D5 is at  -171, 131, Kicad shows it as 171958893, 131126393,
     for ref in refs:
