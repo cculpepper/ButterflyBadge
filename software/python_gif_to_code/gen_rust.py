@@ -25,7 +25,7 @@ for led in led_locs:
     if led[4] > led_max_y:
         led_max_y = led[4]
 #print(f"LED Max: {led_max_x}, {led_max_y} , LED Min: {led_min_x}, {led_min_y}")
-print(f"let frames = [")
+print(f"const frames : [[[u8;3];512];{len(np_frames)}]= [")
 for i, frame in enumerate(np_frames):
     print("[")
     for led in led_locs:
