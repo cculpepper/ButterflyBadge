@@ -45,6 +45,7 @@
         "silk_text_thickness": 0.15,
         "silk_text_upright": false,
         "zones": {
+          "45_degree_only": false,
           "min_clearance": 0.0
         }
       },
@@ -115,6 +116,8 @@
         "zones_intersect": "error"
       },
       "rules": {
+        "allow_blind_buried_vias": false,
+        "allow_microvias": false,
         "max_error": 0.005,
         "min_clearance": 0.095,
         "min_connection": 0.0,
@@ -199,7 +202,8 @@
           "drill": 0.5
         }
       ],
-      "zones_allow_external_fillets": false
+      "zones_allow_external_fillets": false,
+      "zones_use_no_outline": true
     },
     "layer_presets": [],
     "viewports": []
@@ -463,24 +467,7 @@
     },
     "net_colors": null,
     "netclass_assignments": null,
-    "netclass_patterns": [
-      {
-        "netclass": "POWER",
-        "pattern": "5V"
-      },
-      {
-        "netclass": "POWER",
-        "pattern": "VUSB"
-      },
-      {
-        "netclass": "POWER",
-        "pattern": "BATTERY_RAW"
-      },
-      {
-        "netclass": "POWER",
-        "pattern": "5V_UNSWITCHED"
-      }
-    ]
+    "netclass_patterns": []
   },
   "pcbnew": {
     "last_paths": {

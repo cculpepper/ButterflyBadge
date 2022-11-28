@@ -21,28 +21,21 @@ stbd = LoadBoard(stbdLoc)
 locs = {}
 angs = {}
 
-for part in stbd.GetFootprints():
-    loc = part.GetPosition()
-    ref = part.GetReference()
-    rot = part.GetOrientation().AsDegrees()
-    if rot > 0:
-        rot -= 180
-    else:
-        rot += 180
+def printFootprints(board, wing_side, string_number, x_offset):
+    for part in board.GetFootprints():
+        loc = part.GetPosition()
+        ref = part.GetReference()
+        if ref[1:].isnumeric():
+            locs[ref] = loc
 
-    locs[ref] = loc
-    angs[ref] = rot
+    refs = list(locs.keys())
+    refs.sort(key=lambda x:int(x[1:]))
+    # D5 is at  -171, 131, Kicad shows it as 171958893, 131126393,
+    for ref in refs:
+        if "D" in ref:
+            print(f"{wing_side}, {string_number}, {ref[1:]}, {ref}, {locs[ref][0] * 10**-6+x_offset}, {locs[ref][1] * 10**-6}, ")
 
-for part in port.GetFootprints():
-    ref = part.GetReference()
-    if ref in locs:
-        newLoc = locs[ref]
-        newLoc[0] *= -1
-        newRot = angs[ref]
-        part.SetPosition(newLoc)
-        part.SetOrientation(EDA_ANGLE(newRot, DEGREES_T))
-        print("Setting location of " + str(ref))
-
-port.Save(portLoc)
-
+print(f"Side, String number, LED Number, Reference, X, Y")
+printFootprints(stbd, "stbd", 0, 0)
+printFootprints(port, "port", 1, 300)
 
