@@ -155,7 +155,7 @@ fn main() -> ! {
     // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
     // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
     // already 540mA for just 3 white LEDs!
-    let strip_brightness = 15; // Limit brightness to 64/256
+    let strip_brightness = 32; // Limit brightness to 64/256
 
     // Slow down timer by this factor (0.1 will result in 10 seconds):
     let animation_speed = 0.2;
@@ -164,72 +164,26 @@ fn main() -> ! {
     let mut count = 0;
     
     let mut rainbow_driver = RainbowyDriver { hue_state: 0. };
+    let mut frame_num = 0;
+    let mut rgb : [u8; 3] = [0,0,0];
 
     loop {
-        for (i, led) in leds_stbd.iter_mut().enumerate() {
-            if ((i+chase_led_num) % num_leds_on) == 0{
-                // An offset to give 3 consecutive LEDs a different color:
-
-                let hue_offs = match i % 10 {
-                    1 => 0.25,
-                    2 => 0.5,
-                    _ => 0.0,
-                };
-
-                let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
-                // Bring -1..1 sine range to 0..1 range:
-                let sin_01 = (sin_11 + 1.0) * 0.2;
-
-                let hue = 360.0 * sin_01;
-                let sat = 1.0;
-                let val = 1.0;
-
-                let rgb = hsv2rgb_u8(hue, sat, val);
-                *led = rgb.into();
-            } else {
-                let rgb = hsv2rgb_u8(0.0,0.0,0.0);
-                *led = rgb.into();
+        frame_num += 1;
+        if (frame_num >= frames::frames.len()){
+            frame_num = 0;
             }
-        }
-        
         for (i, led) in leds_port.iter_mut().enumerate() {
-            if (in_chain(i, chase_led_num)){
-
-                let hue_offs = match i % 3 {
-                    1 => 0.25,
-                    2 => 0.5,
-                    _ => 0.0,
-                };
-
-                let sin_11 = sin((t + hue_offs) * 2.0 * core::f32::consts::PI);
-                // Bring -1..1 sine range to 0..1 range:
-                let sin_01 = (sin_11 + 1.0) * 0.2;
-
-                let hue = 360.0 * sin_01;
-                let sat = 1.0;
-                let val = 1.0;
-
-                let rgb = hsv2rgb_u8(hue, sat, val);
-                *led = rgb.into();
-            } else{
-                let rgb = hsv2rgb_u8(0.0,0.0,0.0);
-                *led = rgb.into();
-
-            }            
+            rgb[0] = frames::frames[frame_num][i][0];
+            rgb[1] = frames::frames[frame_num][i][1];
+            rgb[2] = frames::frames[frame_num][i][2];
+            *led = rgb.into();
         }
         
-        {
-        //    rainbow_driver.update(leds_port.as_mut_slice());
-        }
-
-        count += 1;
-        if (count >= 20){
-            chase_led_num+= 1;
-            count = 0;
-
-        }
-        if (chase_led_num >= 255){
-            chase_led_num = 0;
+        for (i, led) in leds_stbd.iter_mut().enumerate() {
+            rgb[0] = frames::frames[frame_num][i+256][0];
+            rgb[1] = frames::frames[frame_num][i+256][1];
+            rgb[2] = frames::frames[frame_num][i+256][2];
+            *led = rgb.into();
         }
 
         // Here the magic happens and the `leds` buffer is written to the
@@ -240,7 +194,7 @@ fn main() -> ! {
             .unwrap();
 
         // Wait a bit until calculating the next frame:
-        frame_delay.delay_ms(1); // ~60 FPS
+        frame_delay.delay_ms(300); // ~60 FPS
 
         // Increase the time counter variable and make sure it
         // stays inbetween 0.0 to 1.0 range:
