@@ -118,7 +118,7 @@ fn main() -> ! {
     // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
     // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
     // already 540mA for just 3 white LEDs!
-    let strip_brightness = 32; // Limit brightness to 64/256
+    let strip_brightness = 4; // Limit brightness to 64/256
 
     // Slow down timer by this factor (0.1 will result in 10 seconds):
     let animation_speed = 0.2;
