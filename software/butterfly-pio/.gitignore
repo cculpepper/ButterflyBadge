@@ -3,6 +3,7 @@
 .gdb_history
 Cargo.lock
 target/
+-./target/thumbv6m-none-eabi/debug/rp2040-project-template.uf2
 
 # editor files
 .vscode/*
