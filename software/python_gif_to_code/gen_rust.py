@@ -8,7 +8,7 @@ import pysvg.text
 
 
 #  np_frames, extensions, image_specifications = gif2numpy.convert("rainbow.gif")
-np_frames, extensions, image_specifications = gif2numpy.convert("spongebob.gif")
+np_frames, extensions, image_specifications = gif2numpy.convert("spiral.gif")
 #  np_frames, extensions, image_specifications = gif2numpy.convert("bear.gif")
 #  np_frames, extensions, image_specifications = gif2numpy.convert("scrolling_rainbow.gif")
 led_locs = pandas.read_csv("LED_Positions.csv").to_numpy()
