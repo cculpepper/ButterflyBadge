@@ -7,7 +7,7 @@ import pysvg.builders
 import pysvg.text
 
 
-np_frames, extensions, image_specifications = gif2numpy.convert("trees.gif")
+np_frames, extensions, image_specifications = gif2numpy.convert("rainbow.gif")
 #  np_frames, extensions, image_specifications = gif2numpy.convert("bear.gif")
 #  np_frames, extensions, image_specifications = gif2numpy.convert("scrolling_rainbow.gif")
 led_locs = pandas.read_csv("LED_Positions.csv").to_numpy()
@@ -53,5 +53,5 @@ for i, frame in enumerate(np_frames):
         print(f"[{led_red}, {led_green}, {led_blue}],  // Desig {led[2]}  {led_x}, {led_y}")
         svg_document.addElement(shape_builder.createCircle(pixel_x, pixel_y, 5, fill=f"rgb({led_red}, {led_green}, {led_blue})"))
     print("],")
-    svg_document.save(f"gif/frame{i:02}.svg")
+    #  svg_document.save(f"gif/frame{i:02}.svg")
 print("];")
