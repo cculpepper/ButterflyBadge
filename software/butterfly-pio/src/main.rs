@@ -110,19 +110,23 @@ fn main() -> ! {
         timer.count_down(),
     );
 
-    let mut leds = [RGB8::default(); 2 * STRIP_LEN];
-    let mut write_leds = |brightness_level| {
+    let mut write_leds = |buf: &[[u8; 3]; STRIP_LEN * 2]| {
+        fn wing_iter(iter_u8: impl Iterator<Item = RGB8>) -> impl Iterator<Item = RGB8> {
+            // Bring down the overall brightness of the strip to not blow
+            // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
+            // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
+            // already 540mA for just 3 white LEDs!
+            let strip_brightness = 4; // Limit brightness to 64/256
+
+            brightness(iter_u8, strip_brightness)
+        }
+
         ws_stbd
-            .write(brightness(
-                leds[..STRIP_LEN].iter().copied(),
-                brightness_level,
-            ))
+            .write(wing_iter(buf[..STRIP_LEN].iter().map(|v| RGB8::from(*v))))
             .unwrap();
+
         ws_port
-            .write(brightness(
-                leds[STRIP_LEN..].iter().copied(),
-                brightness_level,
-            ))
+            .write(wing_iter(buf[STRIP_LEN..].iter().map(|v| RGB8::from(*v))))
             .unwrap();
     };
 
@@ -133,16 +137,7 @@ fn main() -> ! {
             frame_num = 0;
         }
 
-        for (i, led) in leds.iter_mut().enumerate() {
-            *led = frames::frames[frame_num][i].into();
-        }
-
-        // Bring down the overall brightness of the strip to not blow
-        // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
-        // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
-        // already 540mA for just 3 white LEDs!
-        let strip_brightness = 4; // Limit brightness to 64/256
-        write_leds(strip_brightness)
+        write_leds(&frames::frames[frame_num]);
     };
 
     tick_driver(
