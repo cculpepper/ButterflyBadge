@@ -1,7 +1,7 @@
-
 #![no_std]
 #![no_main]
 
+use embedded_hal::blocking::spi::write;
 // The macro for our start-up function
 use rp_pico::entry;
 
@@ -58,9 +58,9 @@ fn main() -> ! {
         pac.PLL_USB,
         &mut pac.RESETS,
         &mut watchdog,
-        )
-        .ok()
-        .unwrap();
+    )
+    .ok()
+    .unwrap();
 
     // The single-cycle I/O block controls our GPIO pins
     let sio = hal::Sio::new(pac.SIO);
@@ -71,7 +71,7 @@ fn main() -> ! {
         pac.PADS_BANK0,
         sio.gpio_bank0,
         &mut pac.RESETS,
-        );
+    );
 
     // Setup a delay for the LED blink signals:
     let mut frame_delay =
@@ -97,7 +97,7 @@ fn main() -> ! {
         sm0_port,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
-        );
+    );
 
     // Instanciate a Ws2812 LED strip:
     let mut ws_stbd = Ws2812::new(
@@ -108,125 +108,55 @@ fn main() -> ! {
         sm0_stbd,
         clocks.peripheral_clock.freq(),
         timer.count_down(),
-        );
+    );
 
-    let mut leds_stbd: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
-    let mut leds_port: [RGB8; STRIP_LEN] = [(0, 0, 0).into(); STRIP_LEN];
-    let mut t = 0.0;
-
-    // Bring down the overall brightness of the strip to not blow
-    // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
-    // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
-    // already 540mA for just 3 white LEDs!
-    let strip_brightness = 4; // Limit brightness to 64/256
-
-    // Slow down timer by this factor (0.1 will result in 10 seconds):
-    let animation_speed = 0.2;
-    let mut chase_led_num= 0;
-    let mut num_leds_on= 3;
-    let mut count = 0;
-    
-    let mut rainbow_driver = RainbowyDriver { hue_state: 0. };
-    let mut frame_num = 0;
-    let mut rgb : [u8; 3] = [0,0,0];
-
-    loop {
-        frame_num += 1;
-        if (frame_num >= frames::frames.len()){
-            frame_num = 0;
-            }
-        for (i, led) in leds_port.iter_mut().enumerate() {
-            rgb[0] = frames::frames[frame_num][i][0];
-            rgb[1] = frames::frames[frame_num][i][1];
-            rgb[2] = frames::frames[frame_num][i][2];
-            *led = rgb.into();
-        }
-        
-        for (i, led) in leds_stbd.iter_mut().enumerate() {
-            rgb[0] = frames::frames[frame_num][i+256][0];
-            rgb[1] = frames::frames[frame_num][i+256][1];
-            rgb[2] = frames::frames[frame_num][i+256][2];
-            *led = rgb.into();
-        }
-
-        // Here the magic happens and the `leds` buffer is written to the
-        // ws2812 LEDs:
-        ws_stbd.write(brightness(leds_stbd.iter().copied(), strip_brightness))
+    let mut leds = [RGB8::default(); 2 * STRIP_LEN];
+    let mut write_leds = |brightness_level| {
+        ws_stbd
+            .write(brightness(
+                leds[..STRIP_LEN].iter().copied(),
+                brightness_level,
+            ))
             .unwrap();
-        ws_port.write(brightness(leds_port.iter().copied(), strip_brightness))
+        ws_port
+            .write(brightness(
+                leds[STRIP_LEN..].iter().copied(),
+                brightness_level,
+            ))
             .unwrap();
-
-        // Wait a bit until calculating the next frame:
-        frame_delay.delay_ms(300); // ~60 FPS
-
-        // Increase the time counter variable and make sure it
-        // stays inbetween 0.0 to 1.0 range:
-        t += (16.0 / 1000.0) * animation_speed;
-        while t > 1.0 {
-            t -= 1.0;
-        }
-    }
-}
-
-
-trait LedUpdate {
-    fn update(&mut self, leds: &mut [RGB8]);
-}
-
-
-struct RainbowyDriver {
-    hue_state: f32,
-}
-
-impl LedUpdate for RainbowyDriver {
-    fn update(&mut self, leds: &mut [RGB8]) {
-        for (idx, led_value) in leds.iter_mut().enumerate() {
-            let hue = ((idx as f32 / 255.) + self.hue_state) % 1.0;
-            let full_value = hsv2rgb_u8(hue, 1., 1.);
-            
-            *led_value = full_value.into();
-        }
-        self.hue_state = (self.hue_state + (1./255.)) % 1.0;
-    }
-}
-
-pub fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
-    let c = val * sat;
-    let v = (hue / 60.0) % 2.0 - 1.0;
-    let v = if v < 0.0 { -v } else { v };
-    let x = c * (1.0 - v);
-    let m = val - c;
-    let (r, g, b) = if hue < 60.0 {
-        (c, x, 0.0)
-    } else if hue < 120.0 {
-        (x, c, 0.0)
-    } else if hue < 180.0 {
-        (0.0, c, x)
-    } else if hue < 240.0 {
-        (0.0, x, c)
-    } else if hue < 300.0 {
-        (x, 0.0, c)
-    } else {
-        (c, 0.0, x)
     };
-    (r + m, g + m, b + m)
+
+    let mut frame_num = 0;
+    let frame_player = move |_dt: f32| {
+        frame_num += 1;
+        if frame_num >= frames::frames.len() {
+            frame_num = 0;
+        }
+
+        for (i, led) in leds.iter_mut().enumerate() {
+            *led = frames::frames[frame_num][i].into();
+        }
+
+        // Bring down the overall brightness of the strip to not blow
+        // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
+        // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
+        // already 540mA for just 3 white LEDs!
+        let strip_brightness = 4; // Limit brightness to 64/256
+        write_leds(strip_brightness)
+    };
+
+    tick_driver(
+        20.,
+        |delay| {
+            frame_delay.delay_ms(delay);
+        },
+        frame_player,
+    );
 }
 
-pub fn hsv2rgb_u8(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
-    let r = hsv2rgb(h, s, v);
-
-    (
-        (r.0 * 255.0) as u8,
-        (r.1 * 255.0) as u8,
-        (r.2 * 255.0) as u8,
-        )
+fn tick_driver(hz: f32, mut delayer: impl FnMut(u32), mut f: impl FnMut(f32)) -> ! {
+    loop {
+        f(1. / hz);
+        delayer((1000. / hz) as u32);
+    }
 }
-
-pub fn in_chain(i: usize, num: usize) -> bool{
-    	let i_signed = i as i32;
-	let num_signed = num as i32;
-	const CHAIN_LEN: i32 = 17;
-
-	(i_signed - num_signed).abs() < CHAIN_LEN
-}
-
