@@ -33,10 +33,6 @@ use smart_leds::{brightness, SmartLedsWrite, RGB8};
 // Import the actual crate to handle the Ws2812 protocol:
 use ws2812_pio::Ws2812;
 
-// Currently 3 consecutive LEDs are driven by this example
-// to keep the power draw compatible with USB:
-const STRIP_LEN: usize = 256;
-
 mod frames;
 #[entry]
 fn main() -> ! {
@@ -110,6 +106,7 @@ fn main() -> ! {
         timer.count_down(),
     );
 
+    const STRIP_LEN: usize = 256;
     let mut write_leds = |buf: &[[u8; 3]; STRIP_LEN * 2]| {
         fn wing_iter(iter_u8: impl Iterator<Item = RGB8>) -> impl Iterator<Item = RGB8> {
             // Bring down the overall brightness of the strip to not blow

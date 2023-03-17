@@ -1,0 +1,18 @@
+[package]
+name = "butterfly-gui"
+
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+eframe = "0.21.3"
+egui_extras = { version = "0.21.0", features = ["svg"] }
+nalgebra = "0.32.2"
+svg = "0.13.0"
+csv = "1.1.6"
+
+butterfly-common = { path = "../butterfly-common" }
+
+
+

@@ -1,4 +1,5 @@
-use butterfly_gui::gui::MyApp;
+use butterfly_gui::ButterflyApp;
+
 use eframe::egui::{Pos2, Vec2};
 
 fn main() {
@@ -12,6 +13,6 @@ fn main() {
     eframe::run_native(
         "Butterfly Visualization",
         options,
-        Box::new(|_cc| Box::new(MyApp::default())),
-    );
+        Box::new(|_cc| Box::new(ButterflyApp::default())),
+    ).unwrap();
 }

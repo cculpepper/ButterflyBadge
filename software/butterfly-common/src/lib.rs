@@ -1,3 +1,13 @@
+#![no_std]
+
+mod vec;
+pub use vec::*;
+
+mod led_positions;
+pub use led_positions::butterfly_uvs;
+
+pub mod vis;
+
 pub fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
     let c = val * sat;
     let v = (hue / 60.0) % 2.0 - 1.0;
