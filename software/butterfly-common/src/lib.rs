@@ -31,11 +31,13 @@ pub fn hsv2rgb(hue: f32, sat: f32, val: f32) -> (f32, f32, f32) {
 }
 
 pub fn hsv2rgb_u8(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
-    let r = hsv2rgb(h, s, v);
+    let (r,g,b) = hsv2rgb(h, s, v);
 
-    (
-        (r.0 * 255.0) as u8,
-        (r.1 * 255.0) as u8,
-        (r.2 * 255.0) as u8,
-    )
+    let rgb = (
+        (r * 255.0) as u8,
+        (g * 255.0) as u8,
+        (b * 255.0) as u8,
+    );
+
+    rgb
 }

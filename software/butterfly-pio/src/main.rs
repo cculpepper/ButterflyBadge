@@ -33,6 +33,13 @@ use smart_leds::{brightness, SmartLedsWrite, RGB8};
 // Import the actual crate to handle the Ws2812 protocol:
 use ws2812_pio::Ws2812;
 
+
+use butterfly_common::vis::{
+    butterfly_uv_iter,
+    color_fn_1,
+};
+
+
 mod frames;
 #[entry]
 fn main() -> ! {
@@ -113,7 +120,7 @@ fn main() -> ! {
             // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
             // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
             // already 540mA for just 3 white LEDs!
-            let strip_brightness = 4; // Limit brightness to 64/256
+            let strip_brightness = 3; // Limit brightness to 64/256
 
             brightness(iter_u8, strip_brightness)
         }
@@ -127,28 +134,39 @@ fn main() -> ! {
             .unwrap();
     };
 
-    let mut frame_num = 0;
-    let frame_player = move |_dt: f32| {
-        frame_num += 1;
-        if frame_num >= frames::frames.len() {
-            frame_num = 0;
+   
+    // let frame_player = {
+    //     let mut frame_num = 0;
+    //     move |_dt: f32| {
+    //         frame_num += 1;
+    //         if frame_num >= frames::frames.len() {
+    //             frame_num = 0;
+    //         }
+    //         write_leds(&frames::frames[frame_num]);
+    //     }
+    // };
+
+    let mut procedural_player = {
+        let mut led_buf = [[0; 3]; 512];
+        move |dt: f32| {
+            for (idx, uv) in butterfly_uv_iter().enumerate() {
+                let (r,g,b) = color_fn_1(uv, dt);
+                led_buf[idx] = [r,g,b];
+            }
+            write_leds(&led_buf);
         }
 
-        write_leds(&frames::frames[frame_num]);
     };
 
-    tick_driver(
-        20.,
-        |delay| {
-            frame_delay.delay_ms(delay);
-        },
-        frame_player,
-    );
-}
 
-fn tick_driver(hz: f32, mut delayer: impl FnMut(u32), mut f: impl FnMut(f32)) -> ! {
+
+
+    let mut t = 0.;
+    let dt = 1./10. as f32;
     loop {
-        f(1. / hz);
-        delayer((1000. / hz) as u32);
+        procedural_player(t);
+        //delayer();
+        t += dt;
     }
+ 
 }

@@ -4,6 +4,8 @@ name = "rp2040-project-template"
 version = "0.1.0"
 
 [dependencies]
+butterfly-common = { path = "../butterfly-common" }
+
 cortex-m = "0.7.7"
 cortex-m-rt = "0.7.3"
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
