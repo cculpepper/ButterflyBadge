@@ -123,7 +123,7 @@ fn main() -> ! {
             // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
             // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
             // already 540mA for just 3 white LEDs!
-            let strip_brightness = 5; // Limit brightness to 64/256
+            let strip_brightness = 3; // Limit brightness to 64/256
 
             brightness(iter_u8, strip_brightness)
         }
@@ -138,30 +138,27 @@ fn main() -> ! {
     };
 
    
-    // let mut player = {
-    //     let mut frame_num = 0;
-    //     move |_dt: f32| {
-    //         frame_num += 1;
-    //         if frame_num >= frames.len() {
-    //             frame_num = 0;
-    //         }
-    //         write_leds(&frames[frame_num]);
-    //     }
-    // };
-
     let mut player = {
-        let mut led_buf = [[0; 3]; 512];
-        move |dt: f32| {
-            for (idx, uv) in butterfly_uv_iter().enumerate() {
-                let (r,g,b) = color_fn_1(uv, dt);
-                led_buf[idx] = [r,g,b];
+        let mut frame_num = 0;
+        move |_dt: f32| {
+            frame_num += 1;
+            if frame_num >= frames.len() {
+                frame_num = 0;
             }
-            write_leds(&led_buf);
+            write_leds(&frames[frame_num]);
         }
     };
 
-
-
+    // let mut player = {
+    //     let mut led_buf = [[0; 3]; 512];
+    //     move |dt: f32| {
+    //         for (idx, uv) in butterfly_uv_iter().enumerate() {
+    //             let (r,g,b) = color_fn_1(uv, dt);
+    //             led_buf[idx] = [r,g,b];
+    //         }
+    //         write_leds(&led_buf);
+    //     }
+    // };
 
     let mut t = 0.;
     let dt = 1./20. as f32;
