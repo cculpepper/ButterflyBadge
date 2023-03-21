@@ -40,7 +40,10 @@ use butterfly_common::vis::{
 };
 
 
-mod frames;
+//mod frames;
+mod snow;
+use snow::frames;
+
 #[entry]
 fn main() -> ! {
     // Grab our singleton objects
@@ -120,7 +123,7 @@ fn main() -> ! {
             // the USB power supply: every LED draws ~60mA, RGB means 3 LEDs per
             // ws2812 LED, for 3 LEDs that would be: 3 * 3 * 60mA, which is
             // already 540mA for just 3 white LEDs!
-            let strip_brightness = 3; // Limit brightness to 64/256
+            let strip_brightness = 5; // Limit brightness to 64/256
 
             brightness(iter_u8, strip_brightness)
         }
@@ -135,18 +138,18 @@ fn main() -> ! {
     };
 
    
-    // let frame_player = {
+    // let mut player = {
     //     let mut frame_num = 0;
     //     move |_dt: f32| {
     //         frame_num += 1;
-    //         if frame_num >= frames::frames.len() {
+    //         if frame_num >= frames.len() {
     //             frame_num = 0;
     //         }
-    //         write_leds(&frames::frames[frame_num]);
+    //         write_leds(&frames[frame_num]);
     //     }
     // };
 
-    let mut procedural_player = {
+    let mut player = {
         let mut led_buf = [[0; 3]; 512];
         move |dt: f32| {
             for (idx, uv) in butterfly_uv_iter().enumerate() {
@@ -155,18 +158,20 @@ fn main() -> ! {
             }
             write_leds(&led_buf);
         }
-
     };
 
 
 
 
     let mut t = 0.;
-    let dt = 1./10. as f32;
+    let dt = 1./20. as f32;
     loop {
-        procedural_player(t);
-        //delayer();
+
+
+        player(t);
         t += dt;
+        frame_delay.delay_ms((dt * 1000.) as u32);
+       
     }
  
 }
